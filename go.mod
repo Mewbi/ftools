@@ -5,6 +5,7 @@ go 1.27.4
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/goccy/go-yaml v1.19.2
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	go.uber.org/fx v1.24.0
 	go.uber.org/zap v1.28.0
 )

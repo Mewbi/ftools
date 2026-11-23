@@ -40,19 +40,13 @@ Without nginx nothing limits request size yet. The UI promises 20 MB (`frontend/
 - [ ] Keep the "up to 20 MB" text in `dropzone.html` in sync with the config.
 - [ ] If nginx is added later, set `client_max_body_size` to match.
 
-### Service layer
-
-- [ ] `internal/service`: `Service` interface + unexported struct, `fx.Module` with `fx.Provide(New)`, added to `main.go`.
-- [ ] Request/result types in `entity` (e.g. `QRCodeRequest`, `CompressImageRequest`, `CompressResult`), with no HTTP or template types in them.
-- [ ] Web controller gets `service.Service` through `Params`; handlers bind the form, call the service, render a partial.
-- [ ] Shared helper to render `partials/error` with a status code and a clear message.
-
 ### QR code generator
 
-- [ ] `POST /qrcode/generate`. Form: `content`, `size` (256/512/1024), `level` (low/medium/quartile/high).
-- [ ] Generate a PNG (candidate: `github.com/skip2/go-qrcode`).
-- [ ] Render `partials/qrcode_result` with `DataURL` as `template.URL` (`data:image/png;base64,...`), `Content`, `Size`. A plain string gets replaced with `#ZgotmplZ`.
-- [ ] Validate: empty content, length over 2000, unknown size/level → `422` with `partials/error`.
+- [ ] Tests with mocks:
+  - Service: each level produces a PNG; unknown level returns `ErrQRCodeInvalidLevel`.
+  - `QRCodeRequest.Validate`: empty or whitespace-only content, invalid size/level, over capacity, bytes vs characters (`"é"` is 2 bytes).
+  - The `qrCodeCapacity` table matches the library: content at each limit encodes, one byte more is rejected.
+  - Handler with a mocked `service.Service`: success renders the image, a known error returns 422 with its message, an unknown error returns 500 without leaking details.
 
 ### Image compression and resizing
 
@@ -82,6 +76,7 @@ The site says "Files are deleted as soon as your result is ready", so this has t
 
 ### Later
 
+- [ ] Revisit error handling in the web controller. Right now handlers return `422` with the validation error's text (e.g. "qr code: content is empty") and `500` with a generic message for service errors. Consider one shared way to map known errors to a status and a user-facing message, so wording isn't the raw error string and isn't repeated per handler.
 - [ ] Server timeouts in `internal/controller/server.go`. Without them, slow or stalled clients can hold connections open forever. At minimum `ReadHeaderTimeout: 10 * time.Second`; add `ReadTimeout`/`WriteTimeout` once uploads exist (long enough for a 20 MB upload on a slow connection). Good candidates for `config.yaml`.
 - [ ] 404 page: `r.NoRoute(...)` rendering a page with the layout, instead of Gin's plain "404 page not found".
 - [ ] Log server failures:

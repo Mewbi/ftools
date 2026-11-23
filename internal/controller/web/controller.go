@@ -3,8 +3,11 @@ package web
 import (
 	"net/http"
 
+	"ftools/internal/service"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 type WebController interface {
@@ -12,6 +15,8 @@ type WebController interface {
 	QRCodePage(ctx *gin.Context)
 	ImagePage(ctx *gin.Context)
 	PDFPage(ctx *gin.Context)
+
+	GenerateQRCode(ctx *gin.Context)
 }
 
 var _ WebController = (*controller)(nil)
@@ -20,28 +25,24 @@ var Module = fx.Module("web_controller", fx.Provide(New))
 
 type Params struct {
 	fx.In
+	Service service.Service
+	Logger  *zap.Logger
 }
 
-type controller struct{}
+type controller struct {
+	service service.Service
+	logger  *zap.Logger
+}
 
 func New(p Params) WebController {
-	return &controller{}
+	return &controller{
+		service: p.Service,
+		logger:  p.Logger,
+	}
 }
 
 func (c *controller) Home(ctx *gin.Context) {
 	c.page(ctx, "pages/home", "")
-}
-
-func (c *controller) QRCodePage(ctx *gin.Context) {
-	c.page(ctx, "pages/tools/qrcode", "QR code generator")
-}
-
-func (c *controller) ImagePage(ctx *gin.Context) {
-	c.page(ctx, "pages/tools/image", "Compress and resize images")
-}
-
-func (c *controller) PDFPage(ctx *gin.Context) {
-	c.page(ctx, "pages/tools/pdf", "Compress PDF")
 }
 
 // page renders a full page with the data every layout needs.
