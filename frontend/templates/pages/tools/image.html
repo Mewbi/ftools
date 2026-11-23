@@ -1,0 +1,58 @@
+{{define "pages/tools/image"}}
+{{template "layouts/start" .}}
+
+{{template "components/tool_header" "Compress and resize images"}}
+<p class="mt-2 max-w-2xl text-base-content/70">Make a photo smaller without visible loss, or scale it down to a maximum width.</p>
+
+<div class="tool mt-8 grid gap-6 lg:mt-10 lg:grid-cols-2">
+  <form id="tool-form" class="tool-panel flex flex-col gap-5"
+    hx-post="/image/compress" hx-target="#result" hx-swap="innerHTML"
+    hx-encoding="multipart/form-data" hx-disabled-elt="find button[type=submit]">
+
+    {{template "components/dropzone" "image"}}
+
+    <fieldset class="fieldset p-0" x-data="{ q: 80 }">
+      <label for="img-quality" class="fieldset-legend flex w-full justify-between pt-0">
+        Quality <output for="img-quality" class="font-normal tabular-nums text-base-content/70" x-text="q">80</output>
+      </label>
+      <input id="img-quality" name="quality" type="range" min="10" max="100" step="5" value="80" x-model.number="q"
+        class="range range-primary range-sm w-full" aria-describedby="img-quality-help">
+      <p id="img-quality-help" class="text-xs text-base-content/60">Around 80 looks the same as the original for most photos.</p>
+    </fieldset>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <fieldset class="fieldset p-0">
+        <label for="img-width" class="fieldset-legend pt-0">Max width</label>
+        <label class="input w-full">
+          <input id="img-width" name="max_width" type="number" min="16" max="10000" inputmode="numeric" placeholder="Keep original">
+          <span class="text-base-content/50">px</span>
+        </label>
+      </fieldset>
+
+      <fieldset class="fieldset p-0">
+        <label for="img-format" class="fieldset-legend pt-0">Save as</label>
+        <select id="img-format" name="format" class="select w-full">
+          <option value="" selected>Same as original</option>
+          <option value="jpeg">JPG</option>
+          <option value="png">PNG</option>
+          <option value="webp">WebP</option>
+        </select>
+      </fieldset>
+    </div>
+
+    <progress data-upload-progress hidden class="progress progress-primary w-full" value="0" max="100"></progress>
+
+    <button type="submit" class="btn btn-primary self-start">
+      <span class="in-[.htmx-request]:hidden">{{template "components/icon" "shrink"}}</span>
+      <span class="loading loading-spinner loading-sm hidden in-[.htmx-request]:inline-block"></span>
+      Compress image
+    </button>
+  </form>
+
+  <section id="result" class="tool-panel tool-result" aria-live="polite" aria-label="Result">
+    {{template "components/result_empty" "Your compressed image will appear here."}}
+  </section>
+</div>
+
+{{template "layouts/end" .}}
+{{end}}

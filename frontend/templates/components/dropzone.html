@@ -1,0 +1,36 @@
+{{/*
+  File picker with drag and drop. The input is named "file".
+
+    {{template "components/dropzone" "image"}}
+    {{template "components/dropzone" "pdf"}}
+
+  To support a new kind of file, add a branch to both {{if}} blocks below.
+  The size limit text should match the server's upload limit.
+*/}}
+{{define "components/dropzone"}}
+<div x-data="dropzone">
+  <label
+    class="flex cursor-pointer flex-col items-center gap-2 rounded-box border border-dashed border-base-content/20 bg-base-200/60 px-6 py-9 text-center transition-colors hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30"
+    :class="over && 'border-primary bg-primary/5'"
+    @dragover.prevent="over = true"
+    @dragleave="over = false"
+    @drop.prevent="drop($event)">
+    <span class="text-base-content/50" :class="name && 'text-primary'">
+      <svg class="icon size-6!" aria-hidden="true"><use :href="name ? '/static/icons.svg#file' : '/static/icons.svg#upload'" href="/static/icons.svg#upload"></use></svg>
+    </span>
+
+    <span x-show="!name" class="text-[0.9375rem] font-medium">
+      Choose a file <span class="font-normal text-base-content/60">or drop it here</span>
+    </span>
+    <span x-show="name" x-cloak class="max-w-full break-all text-[0.9375rem] font-medium" x-text="name"></span>
+
+    <span x-show="!name" class="text-xs text-base-content/60">
+      {{if eq . "pdf"}}PDF, up to 20 MB{{else}}JPG, PNG or WebP, up to 20 MB{{end}}
+    </span>
+    <span x-show="name" x-cloak class="text-xs text-base-content/60"><span x-text="size"></span>, click to choose another</span>
+
+    <input x-ref="input" @change="pick()" type="file" name="file" required class="sr-only"
+      {{if eq . "pdf"}}accept="application/pdf,.pdf"{{else}}accept="image/jpeg,image/png,image/webp"{{end}}>
+  </label>
+</div>
+{{end}}

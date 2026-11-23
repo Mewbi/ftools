@@ -1,0 +1,9 @@
+.git
+.claude
+.env
+Dockerfile
+docker-compose.yml
+
+# Frontend build tools (the Tailwind binary alone is ~100 MB)
+frontend/bin
+frontend/styles/vendor

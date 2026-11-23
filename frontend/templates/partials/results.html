@@ -1,0 +1,92 @@
+{{/*
+  HTMX fragments. Handlers render these alone (no layout); HTMX swaps them into #result.
+
+
+  partials/qrcode_result
+    .DataURL   template.URL  "data:image/png;base64,..." (must be template.URL, or
+                             html/template replaces it with #ZgotmplZ)
+    .Content   string        the encoded text, shown under the code
+    .Size      int           pixel size, e.g. 512
+
+
+  partials/file_result  (shared by image and PDF compression)
+    .Filename      string        "holiday.jpg"
+    .Details       string        optional, e.g. "4032 × 3024 to 1600 × 1200, WebP"
+    .OriginalSize  string        formatted, "2.4 MB"
+    .ResultSize    string        formatted, "640 KB"
+    .Saved         int           how much smaller the result is, in percent (73 = 73% smaller;
+                                 0 or negative when compression didn't help)
+    .DownloadURL   template.URL  where the result can be downloaded
+    .DownloadName  string        suggested file name for the download
+    .PreviewURL    template.URL  optional image preview (leave empty for PDFs)
+
+
+  partials/error
+    .Message   string   what went wrong and how to fix it, e.g.
+                        "This file is larger than 20 MB. Choose a smaller file."
+    Respond with a 4xx/5xx status; the htmx-config in layouts/base swaps it in anyway.
+*/}}
+
+{{define "partials/qrcode_result"}}
+<div class="flex h-full flex-col items-center justify-center gap-5 py-2">
+  <img src="{{.DataURL}}" alt="QR code" width="{{.Size}}" height="{{.Size}}"
+    class="aspect-square w-full max-w-64 rounded-field border border-base-300 bg-white p-3 [image-rendering:pixelated]">
+  <p class="line-clamp-2 max-w-sm break-all text-center text-sm text-base-content/60">{{.Content}}</p>
+  <a href="{{.DataURL}}" download="qrcode.png" class="btn btn-primary">
+    {{template "components/icon" "download"}} Download PNG
+  </a>
+</div>
+{{end}}
+
+
+{{define "partials/file_result"}}
+<div class="flex flex-col gap-6">
+  {{with .PreviewURL}}
+  <div class="checker grid max-h-72 place-items-center overflow-hidden rounded-field border border-base-300 p-3">
+    <img src="{{.}}" alt="Preview of the compressed image" class="max-h-64 w-auto object-contain">
+  </div>
+  {{end}}
+
+  <div class="flex items-start gap-3">
+    <span class="mt-0.5 text-success">{{template "components/icon" "circle-check"}}</span>
+    <div class="min-w-0">
+      {{if gt .Saved 0}}
+      <p class="text-lg font-semibold tracking-tight">{{.Saved}}% smaller</p>
+      {{else}}
+      <p class="text-lg font-semibold tracking-tight">This file was already well compressed</p>
+      {{end}}
+      <p class="break-all text-sm text-base-content/60">{{.Filename}}{{with .Details}}, {{.}}{{end}}</p>
+    </div>
+  </div>
+
+  <dl class="grid gap-4 text-sm">
+    <div class="grid gap-1.5">
+      <div class="flex justify-between"><dt class="text-base-content/70">Original</dt><dd class="tabular-nums">{{.OriginalSize}}</dd></div>
+      <div class="h-2 rounded-full bg-base-content/15"></div>
+    </div>
+    <div class="grid gap-1.5">
+      <div class="flex justify-between"><dt class="text-base-content/70">Compressed</dt><dd class="font-medium tabular-nums">{{.ResultSize}}</dd></div>
+      <div class="h-2 overflow-hidden rounded-full bg-base-content/5">
+        <div class="h-full rounded-full bg-primary" style="width: calc(100% - {{.Saved}}%)"></div>
+      </div>
+    </div>
+  </dl>
+
+  <div class="flex flex-wrap gap-2">
+    <a href="{{.DownloadURL}}" download="{{.DownloadName}}" class="btn btn-primary">
+      {{template "components/icon" "download"}} Download
+    </a>
+    <a href="" class="btn btn-ghost">
+      {{template "components/icon" "rotate-ccw"}} Start over
+    </a>
+  </div>
+</div>
+{{end}}
+
+
+{{define "partials/error"}}
+<div role="alert" class="alert alert-error alert-soft items-start">
+  {{template "components/icon" "circle-alert"}}
+  <span>{{.Message}}</span>
+</div>
+{{end}}

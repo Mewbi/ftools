@@ -1,0 +1,38 @@
+{{/*
+  Small shared pieces.
+
+  components/icon          {{template "components/icon" "qr-code"}}
+                           Any id from static/icons.svg (Lucide). Sized by .icon in app.css.
+  components/logo          Wordmark. Rename the product here.
+  components/tool_header   {{template "components/tool_header" "QR code generator"}}
+                           Pages put their description paragraph right after it.
+  components/result_empty  {{template "components/result_empty" "Your QR code will appear here."}}
+*/}}
+
+{{define "components/icon"}}<svg class="icon" aria-hidden="true"><use href="/static/icons.svg#{{.}}"></use></svg>{{end}}
+
+{{define "components/logo"}}
+<a href="/" class="flex items-center gap-2 text-[1.0625rem] font-semibold tracking-tight">
+  <svg class="size-5 text-primary" viewBox="0 0 20 20" aria-hidden="true">
+    <rect width="20" height="20" rx="5" fill="currentColor"/>
+    <rect x="5" y="5" width="4" height="4" rx="1" fill="#fff"/>
+    <rect x="11" y="5" width="4" height="4" rx="1" fill="#fff"/>
+    <rect x="5" y="11" width="4" height="4" rx="1" fill="#fff"/>
+    <rect x="11" y="11" width="4" height="4" rx="1" fill="#fff" fill-opacity=".55"/>
+  </svg>
+  ftools
+</a>
+{{end}}
+
+{{define "components/tool_header"}}
+<h1 class="text-2xl font-semibold tracking-tight sm:text-[1.75rem]">{{.}}</h1>
+{{end}}
+
+{{define "components/result_empty"}}
+<div class="flex h-full min-h-28 flex-col items-center justify-center gap-3 text-center text-sm text-base-content/50">
+  <svg class="size-10 text-base-content/20" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <rect x="1" y="1" width="38" height="38" rx="8" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+  </svg>
+  <p class="max-w-56">{{.}}</p>
+</div>
+{{end}}

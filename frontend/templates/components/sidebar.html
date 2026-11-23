@@ -1,0 +1,65 @@
+{{/*
+  Sidebar navigation. Adding a tool: add an <li> here and a row in pages/home.
+  .Path decides which link is highlighted.
+*/}}
+{{define "components/sidebar"}}{{$path := print .Path}}
+<aside class="flex min-h-full w-64 flex-col border-r border-base-300 bg-base-100">
+  <div class="flex h-14 items-center px-5 lg:h-16">
+    {{template "components/logo"}}
+  </div>
+
+  <nav aria-label="Tools" class="flex-1 px-3 py-2">
+    <ul class="menu w-full gap-0.5 p-0 text-[0.9375rem]">
+      <li>
+        <a href="/" {{if eq $path "/"}}class="menu-active" aria-current="page"{{end}}>
+          {{template "components/icon" "house"}} All tools
+        </a>
+      </li>
+    </ul>
+
+    <ul class="menu mt-4 w-full gap-0.5 border-t border-base-300 p-0 pt-4 text-[0.9375rem]">
+      <li>
+        <a href="/qrcode" {{if eq $path "/qrcode"}}class="menu-active" aria-current="page"{{end}}>
+          {{template "components/icon" "qr-code"}} QR code
+        </a>
+      </li>
+      <li>
+        <a href="/image" {{if eq $path "/image"}}class="menu-active" aria-current="page"{{end}}>
+          {{template "components/icon" "image"}} Images
+        </a>
+      </li>
+      <li>
+        <a href="/pdf" {{if eq $path "/pdf"}}class="menu-active" aria-current="page"{{end}}>
+          {{template "components/icon" "file-text"}} PDF
+        </a>
+      </li>
+      <li>
+        <a href="https://furi.ephemeral.dev.br/">
+          {{template "components/icon" "link"}} URL shortener
+          <span class="ml-auto text-base-content/40" title="Opens Furi, a separate site">{{template "components/icon" "arrow-up-right"}}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="flex items-center gap-1 border-t border-base-300 px-3 py-3">
+    <a href="https://github.com/Mewbi/ftools" target="_blank" rel="noopener"
+      class="btn btn-ghost btn-square btn-sm text-base-content/70 hover:text-base-content"
+      aria-label="Source code on GitHub" title="Source code on GitHub">
+      {{template "components/icon" "github"}}
+    </a>
+    <a href="https://www.linkedin.com/in/felipe-fernandes-gsc/" target="_blank" rel="noopener"
+      class="btn btn-ghost btn-square btn-sm text-base-content/70 hover:text-base-content"
+      aria-label="LinkedIn" title="LinkedIn">
+      {{template "components/icon" "linkedin"}}
+    </a>
+
+    <button type="button" data-theme-toggle
+      class="btn btn-ghost btn-square btn-sm ml-auto text-base-content/70 hover:text-base-content"
+      aria-label="Switch between light and dark mode" title="Switch between light and dark mode">
+      <span class="theme-when-light">{{template "components/icon" "moon"}}</span>
+      <span class="theme-when-dark">{{template "components/icon" "sun"}}</span>
+    </button>
+  </div>
+</aside>
+{{end}}

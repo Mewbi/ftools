@@ -1,0 +1,34 @@
+{{/*
+  Page footer: links and the light/dark switch. Only on small screens, where the
+  sidebar is hidden in the drawer; on large screens the sidebar shows the same links.
+*/}}
+{{define "components/footer"}}
+<footer class="border-t border-base-300 lg:hidden">
+  <div class="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4 sm:px-8">
+    <p class="flex items-center gap-2 text-xs text-base-content/60">
+      {{template "components/icon" "shield-check"}}
+      Files are deleted as soon as your result is ready.
+    </p>
+
+    <div class="ml-auto flex items-center gap-1">
+      <a href="https://github.com/Mewbi/ftools" target="_blank" rel="noopener"
+        class="btn btn-ghost btn-square btn-sm text-base-content/70 hover:text-base-content"
+        aria-label="Source code on GitHub" title="Source code on GitHub">
+        {{template "components/icon" "github"}}
+      </a>
+      <a href="https://www.linkedin.com/in/felipe-fernandes-gsc/" target="_blank" rel="noopener"
+        class="btn btn-ghost btn-square btn-sm text-base-content/70 hover:text-base-content"
+        aria-label="LinkedIn" title="LinkedIn">
+        {{template "components/icon" "linkedin"}}
+      </a>
+      <span class="mx-1 h-5 w-px bg-base-300" aria-hidden="true"></span>
+      <button type="button" data-theme-toggle
+        class="btn btn-ghost btn-square btn-sm text-base-content/70 hover:text-base-content"
+        aria-label="Switch between light and dark mode" title="Switch between light and dark mode">
+        <span class="theme-when-light">{{template "components/icon" "moon"}}</span>
+        <span class="theme-when-dark">{{template "components/icon" "sun"}}</span>
+      </button>
+    </div>
+  </div>
+</footer>
+{{end}}

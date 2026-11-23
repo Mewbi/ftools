@@ -1,0 +1,47 @@
+{{define "pages/tools/pdf"}}
+{{template "layouts/start" .}}
+
+{{template "components/tool_header" "Compress PDF"}}
+<p class="mt-2 max-w-2xl text-base-content/70">Shrink a PDF so it fits email attachment and upload limits. Text stays sharp; images are recompressed.</p>
+
+<div class="tool mt-8 grid gap-6 lg:mt-10 lg:grid-cols-2">
+  <form id="tool-form" class="tool-panel flex flex-col gap-5"
+    hx-post="/pdf/compress" hx-target="#result" hx-swap="innerHTML"
+    hx-encoding="multipart/form-data" hx-disabled-elt="find button[type=submit]">
+
+    {{template "components/dropzone" "pdf"}}
+
+    <fieldset class="fieldset p-0">
+      <legend class="fieldset-legend pt-0">Compression</legend>
+      <div class="grid gap-2">
+        <label class="choice">
+          <input type="radio" name="level" value="low" class="radio radio-primary radio-sm">
+          <span><span class="block font-medium">Light</span><span class="block text-xs text-base-content/60">Images keep their full quality. Smaller savings.</span></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="level" value="medium" class="radio radio-primary radio-sm" checked>
+          <span><span class="block font-medium">Balanced</span><span class="block text-xs text-base-content/60">Good for email and most upload forms.</span></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="level" value="high" class="radio radio-primary radio-sm">
+          <span><span class="block font-medium">Strong</span><span class="block text-xs text-base-content/60">Smallest file. Photos may look softer.</span></span>
+        </label>
+      </div>
+    </fieldset>
+
+    <progress data-upload-progress hidden class="progress progress-primary w-full" value="0" max="100"></progress>
+
+    <button type="submit" class="btn btn-primary self-start">
+      <span class="in-[.htmx-request]:hidden">{{template "components/icon" "shrink"}}</span>
+      <span class="loading loading-spinner loading-sm hidden in-[.htmx-request]:inline-block"></span>
+      Compress PDF
+    </button>
+  </form>
+
+  <section id="result" class="tool-panel tool-result" aria-live="polite" aria-label="Result">
+    {{template "components/result_empty" "Your compressed PDF will appear here."}}
+  </section>
+</div>
+
+{{template "layouts/end" .}}
+{{end}}

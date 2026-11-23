@@ -1,0 +1,53 @@
+{{define "pages/tools/qrcode"}}
+{{template "layouts/start" .}}
+
+{{template "components/tool_header" "QR code generator"}}
+<p class="mt-2 max-w-2xl text-base-content/70">Paste a link or any text. The code works with every phone camera and doesn't expire.</p>
+
+<div class="tool mt-8 grid gap-6 lg:mt-10 lg:grid-cols-2">
+  <form id="tool-form" class="tool-panel flex flex-col gap-5"
+    hx-post="/qrcode/generate" hx-target="#result" hx-swap="innerHTML"
+    hx-disabled-elt="find button[type=submit]">
+
+    <fieldset class="fieldset p-0">
+      <label for="qr-content" class="fieldset-legend pt-0">Text or link</label>
+      <textarea id="qr-content" name="content" rows="4" required maxlength="2000"
+        class="textarea w-full text-[0.9375rem]" placeholder="https://example.com"></textarea>
+    </fieldset>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <fieldset class="fieldset p-0">
+        <label for="qr-size" class="fieldset-legend pt-0">Size</label>
+        <select id="qr-size" name="size" class="select w-full">
+          <option value="256">Small, 256 px</option>
+          <option value="512" selected>Medium, 512 px</option>
+          <option value="1024">Large, 1024 px</option>
+        </select>
+      </fieldset>
+
+      <fieldset class="fieldset p-0">
+        <label for="qr-level" class="fieldset-legend pt-0">Error correction</label>
+        <select id="qr-level" name="level" class="select w-full" aria-describedby="qr-level-help">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="quartile">Quartile</option>
+          <option value="high">High</option>
+        </select>
+      </fieldset>
+    </div>
+    <p id="qr-level-help" class="-mt-2 text-xs text-base-content/60">Higher levels still scan when the code is scratched or partly covered, but make it denser.</p>
+
+    <button type="submit" class="btn btn-primary self-start">
+      <span class="in-[.htmx-request]:hidden">{{template "components/icon" "qr-code"}}</span>
+      <span class="loading loading-spinner loading-sm hidden in-[.htmx-request]:inline-block"></span>
+      Generate QR code
+    </button>
+  </form>
+
+  <section id="result" class="tool-panel tool-result" aria-live="polite" aria-label="Result">
+    {{template "components/result_empty" "Your QR code will appear here."}}
+  </section>
+</div>
+
+{{template "layouts/end" .}}
+{{end}}
