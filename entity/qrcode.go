@@ -1,15 +1,8 @@
 package entity
 
 import (
-	"errors"
+	"fmt"
 	"strings"
-)
-
-var (
-	ErrQRCodeEmptyContent   = errors.New("qr code: content is empty")
-	ErrQRCodeContentTooLong = errors.New("qr code: content too long for the error correction level")
-	ErrQRCodeInvalidSize    = errors.New("qr code: invalid size")
-	ErrQRCodeInvalidLevel   = errors.New("qr code: invalid error correction level")
 )
 
 // QRCodeLevel is the error correction level: how much of the code can be
@@ -44,17 +37,17 @@ type QRCodeRequest struct {
 // Validate checks the request before generating a QR code.
 func (r QRCodeRequest) Validate() error {
 	if strings.TrimSpace(r.Content) == "" {
-		return ErrQRCodeEmptyContent
+		return fmt.Errorf("%w: qr content cannot be empty", ErrInvalidRequest)
 	}
 	if !qrCodeSizes[r.Size] {
-		return ErrQRCodeInvalidSize
+		return fmt.Errorf("%w: invalid size %d", ErrInvalidRequest, r.Size)
 	}
 	capacity, ok := qrCodeCapacity[r.Level]
 	if !ok {
-		return ErrQRCodeInvalidLevel
+		return fmt.Errorf("%w: invalid level %q", ErrInvalidRequest, r.Level)
 	}
 	if len(r.Content) > capacity {
-		return ErrQRCodeContentTooLong
+		return fmt.Errorf("%w: content length %d exceeds capacity", ErrInvalidRequest, len(r.Content))
 	}
 	return nil
 }

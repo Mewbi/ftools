@@ -7,6 +7,7 @@ import (
 	"ftools/entity"
 
 	"github.com/skip2/go-qrcode"
+	"go.uber.org/zap"
 )
 
 var qrCodeLevels = map[entity.QRCodeLevel]qrcode.RecoveryLevel{
@@ -19,17 +20,19 @@ var qrCodeLevels = map[entity.QRCodeLevel]qrcode.RecoveryLevel{
 func (s *service) GenerateQRCode(ctx context.Context, req entity.QRCodeRequest) (entity.QRCode, error) {
 	level, ok := qrCodeLevels[req.Level]
 	if !ok {
-		return entity.QRCode{}, fmt.Errorf("generate qr code: %w: %q", entity.ErrQRCodeInvalidLevel, req.Level)
+		return entity.QRCode{}, fmt.Errorf("%w: invalid request level: %s", entity.ErrInvalidRequest, req.Level)
 	}
 
 	code, err := qrcode.New(req.Content, level)
 	if err != nil {
-		return entity.QRCode{}, fmt.Errorf("generate qr code: %w", err)
+		s.logger.Error("failed to generate QR code", zap.Error(err))
+		return entity.QRCode{}, entity.ErrInternalError
 	}
 
 	png, err := code.PNG(req.Size)
 	if err != nil {
-		return entity.QRCode{}, fmt.Errorf("encode qr code png: %w", err)
+		s.logger.Error("failed to encode QR code to PNG", zap.Error(err))
+		return entity.QRCode{}, entity.ErrInternalError
 	}
 
 	return entity.QRCode{PNG: png, Size: req.Size, Content: req.Content}, nil

@@ -26,16 +26,14 @@ func (c *controller) GenerateQRCode(ctx *gin.Context) {
 		Level:   entity.QRCodeLevel(ctx.PostForm("level")),
 	}
 	if err := req.Validate(); err != nil {
-		ctx.HTML(http.StatusUnprocessableEntity, "partials/error", gin.H{"Message": err.Error()})
+		c.convertError(ctx, err)
 		return
 	}
 
 	qr, err := c.service.GenerateQRCode(ctx.Request.Context(), req)
 	if err != nil {
 		c.logger.Error("generate qr code", zap.Error(err))
-		ctx.HTML(http.StatusInternalServerError, "partials/error", gin.H{
-			"Message": "The server couldn't generate the QR code. Try again in a moment.",
-		})
+		c.convertError(ctx, err)
 		return
 	}
 

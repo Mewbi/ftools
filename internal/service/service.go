@@ -6,6 +6,7 @@ import (
 	"ftools/entity"
 
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 type Service interface {
@@ -18,10 +19,15 @@ var Module = fx.Module("service", fx.Provide(New))
 
 type Params struct {
 	fx.In
+	Logger *zap.Logger
 }
 
-type service struct{}
+type service struct {
+	logger *zap.Logger
+}
 
 func New(p Params) Service {
-	return &service{}
+	return &service{
+		logger: p.Logger,
+	}
 }
