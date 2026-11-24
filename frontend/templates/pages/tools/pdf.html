@@ -5,9 +5,24 @@
 <p class="mt-2 max-w-2xl text-base-content/70">Shrink a PDF so it fits email attachment and upload limits. Text stays sharp; images are recompressed.</p>
 
 <div class="tool mt-8 grid gap-6 lg:mt-10 lg:grid-cols-2">
+  {{/*
+    Each level is a Ghostscript preset. Its image resolution fills the DPI slider;
+    picking another level resets the slider. The form always sends level, color and dpi.
+  */}}
   <form id="tool-form" class="tool-panel flex flex-col gap-5"
     hx-post="/pdf/compress" hx-target="#result" hx-swap="innerHTML"
-    hx-encoding="multipart/form-data" hx-disabled-elt="find button[type=submit]">
+    hx-encoding="multipart/form-data" hx-disabled-elt="find button[type=submit]"
+    x-data="{
+      presets: { low: 300, medium: 150, high: 72 },
+      level: 'medium',
+      dpi: 150,
+      get dpiHint() {
+        if (this.dpi <= 100) return 'For screens only. Photos look soft when zoomed in or printed.';
+        if (this.dpi <= 200) return 'Sharp on screen. Good for email and upload forms.';
+        return 'Print quality. Bigger files.';
+      },
+    }"
+    x-init="$watch('level', (l) => dpi = presets[l])">
 
     {{template "components/dropzone" "pdf"}}
 
@@ -15,19 +30,59 @@
       <legend class="fieldset-legend pt-0">Compression</legend>
       <div class="grid gap-2">
         <label class="choice">
-          <input type="radio" name="level" value="low" class="radio radio-primary radio-sm">
-          <span><span class="block font-medium">Light</span><span class="block text-xs text-base-content/60">Images keep their full quality. Smaller savings.</span></span>
+          <input type="radio" name="level" value="low" x-model="level" class="radio radio-primary radio-sm">
+          <span><span class="block font-medium">Light</span><span class="block text-xs text-base-content/60">Images stay print quality. Smaller savings.</span></span>
         </label>
         <label class="choice">
-          <input type="radio" name="level" value="medium" class="radio radio-primary radio-sm" checked>
+          <input type="radio" name="level" value="medium" x-model="level" class="radio radio-primary radio-sm" checked>
           <span><span class="block font-medium">Balanced</span><span class="block text-xs text-base-content/60">Good for email and most upload forms.</span></span>
         </label>
         <label class="choice">
-          <input type="radio" name="level" value="high" class="radio radio-primary radio-sm">
+          <input type="radio" name="level" value="high" x-model="level" class="radio radio-primary radio-sm">
           <span><span class="block font-medium">Strong</span><span class="block text-xs text-base-content/60">Smallest file. Photos may look softer.</span></span>
         </label>
       </div>
     </fieldset>
+
+    <details class="collapse collapse-arrow rounded-field border border-base-300">
+      <summary class="collapse-title min-h-0 px-3.5 py-3 text-[0.9375rem] font-medium">Advanced</summary>
+      <div class="collapse-content flex flex-col gap-5 px-3.5">
+
+        <fieldset class="fieldset p-0">
+          <legend class="fieldset-legend pt-0">Color</legend>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <label class="choice">
+              <input type="radio" name="color" value="original" class="radio radio-primary radio-sm" checked>
+              <span><span class="block font-medium">Original</span><span class="block text-xs text-base-content/60">Keeps the colors.</span></span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="color" value="grayscale" class="radio radio-primary radio-sm">
+              <span><span class="block font-medium">Black &amp; white</span><span class="block text-xs text-base-content/60">Grayscale. Smaller, text stays selectable.</span></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset p-0">
+          <label for="pdf-dpi" class="fieldset-legend flex w-full justify-between pt-0">
+            Image resolution
+            <span class="font-normal tabular-nums text-base-content/70">
+              <output for="pdf-dpi" x-text="dpi">150</output> dpi
+              <span x-show="dpi === presets[level]" x-cloak class="text-base-content/50">(preset)</span>
+            </span>
+          </label>
+          <input id="pdf-dpi" name="dpi" type="range" min="72" max="300" step="6" value="150" x-model.number="dpi"
+            class="range range-primary range-sm w-full" aria-describedby="pdf-dpi-help">
+          <div class="flex justify-between text-xs tabular-nums text-base-content/50" aria-hidden="true">
+            <span>72</span><span>300</span>
+          </div>
+          <p id="pdf-dpi-help" class="text-xs text-base-content/60">
+            <span x-text="dpiHint">Sharp on screen. Good for email and upload forms.</span>
+            Text is never affected.
+          </p>
+        </fieldset>
+
+      </div>
+    </details>
 
     <progress data-upload-progress hidden class="progress progress-primary w-full" value="0" max="100"></progress>
 
