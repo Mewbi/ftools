@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/goccy/go-yaml"
 	"go.uber.org/fx"
@@ -14,10 +15,17 @@ var Module = fx.Module("config", fx.Provide(New))
 type Config struct {
 	fx.Out
 	Server Server `yaml:"server"`
+	PDF    PDF    `yaml:"pdf"`
 }
 
 type Server struct {
 	Addr string `yaml:"addr"`
+}
+
+type PDF struct {
+	Timeout       time.Duration `yaml:"timeout"`
+	QueueTimeout  time.Duration `yaml:"queue_timeout"`
+	MaxConcurrent int           `yaml:"max_concurrent"` // 0 = number of CPUs
 }
 
 func New() (Config, error) {

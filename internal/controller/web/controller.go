@@ -19,6 +19,7 @@ type WebController interface {
 	PDFPage(ctx *gin.Context)
 
 	GenerateQRCode(ctx *gin.Context)
+	CompressPDF(ctx *gin.Context)
 }
 
 var _ WebController = (*controller)(nil)
@@ -61,6 +62,10 @@ func (c *controller) convertError(ctx *gin.Context, err error) {
 	switch {
 	case errors.Is(err, entity.ErrInvalidRequest):
 		ctx.HTML(http.StatusUnprocessableEntity, "partials/error", gin.H{"Message": err.Error()})
+	case errors.Is(err, entity.ErrResourceExhausted):
+		ctx.HTML(http.StatusTooManyRequests, "partials/error", gin.H{
+			"Message": "The server is busy. Try again later.",
+		})
 	case errors.Is(err, entity.ErrInternalError):
 		ctx.HTML(http.StatusInternalServerError, "partials/error", gin.H{
 			"Message": "The server couldn't process your request. Try again in a moment.",

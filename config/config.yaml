@@ -1,2 +1,10 @@
 server:
   addr: ":8080"
+
+pdf:
+  # Time limit to process pdf compression
+  timeout: 60s
+  # How long a request waits for a free slot
+  queue_timeout: 30s
+  # Max concurrent pdf compression runs at the same time. 0 = number of CPUs
+  max_concurrent: 0

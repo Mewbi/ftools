@@ -48,6 +48,7 @@ func (s *server) setupWebRoutes(r *gin.Engine) error {
 	r.GET("pdf", s.webController.PDFPage)
 
 	r.POST("qrcode/generate", s.webController.GenerateQRCode)
+	r.POST("pdf/compress", s.webController.CompressPDF)
 
 	return nil
 }

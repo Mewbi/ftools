@@ -9,6 +9,8 @@ make -C frontend css          # build the CSS (templates are embedded in the bin
 go run .                      # http://localhost:8080
 ```
 
+Requires Ghostscript (`gs`) for PDF compression; the server won't start without it (`apt install ghostscript` / `brew install ghostscript`).
+
 With Docker:
 
 ```sh
@@ -58,52 +60,17 @@ Without nginx nothing limits request size yet. The UI promises 20 MB (`frontend/
 
 ### PDF compression (Ghostscript)
 
-The frontend is done (`frontend/templates/pages/tools/pdf.html`). It always sends `file`, `level`, `color` and `dpi`.
+`POST /pdf/compress` is implemented. Known limitations:
 
-**Contract**
+- The download is a base64 data URL in the response (see "Downloads and cleanup").
+- `-dPDFSTOPONERROR` is needed: without it gs exits 0 on a password-protected file and writes an empty PDF. Downside: damaged files gs could have repaired are rejected. Revisit if users report valid-looking PDFs failing.
 
-- [ ] `POST /pdf/compress` (multipart). Form:
-  - `file`: the PDF.
-  - `level`: `low` | `medium` | `high`, mapped to `-dPDFSETTINGS=/printer` | `/ebook` | `/screen`.
-  - `color`: `original` | `grayscale`.
-  - `dpi`: integer 72–300. The UI fills it with the preset value (300 / 150 / 72) and lets the user change it.
-- [ ] `entity.PDFCompressRequest` with `Validate()` (same pattern as `QRCodeRequest`): known level, known color, dpi in range, non-empty file. Errors wrap `entity.ErrInvalidRequest`.
-- [ ] Render `partials/file_result` (no `PreviewURL`). Show original size → result size and % saved.
-
-**Ghostscript call**
-
-- [ ] Base args: `-sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dPDFSETTINGS=<preset> -dSAFER -dBATCH -dNOPAUSE -dQUIET -dDetectDuplicateImages=true`.
-- [ ] DPI: `-dDownsampleColorImages=true -dColorImageResolution=<dpi> -dDownsampleGrayImages=true -dGrayImageResolution=<dpi>`. Leave mono (1-bit) images on the preset, so scanned text stays readable.
-- [ ] Grayscale: `-sColorConversionStrategy=Gray -dProcessColorModel=/DeviceGray`.
-- [ ] `-sOutputFile=<out>` then `<in>` last.
-- [ ] Output not smaller than the input: return the original with "This PDF is already well optimized".
-- [ ] Map failures: password-protected or corrupt PDF → 422 with a clear message. Timeout → 422 "This PDF took too long to process". Anything else → `ErrInternalError`.
 - [ ] Test the presets on real files (scans, text-only, with links). Ghostscript rewrites the PDF and may drop hyperlinks. If it does, mention it on the page.
-
-**Runtime**
-
-- [ ] `Dockerfile` runtime stage: `RUN apk add --no-cache ghostscript`. Keep the Alpine version current so security fixes in `gs` are picked up.
-- [ ] Check at startup with `exec.LookPath("gs")`, and log `gs --version`. Fail fast if it's missing.
-- [ ] Local dev needs `gs` installed. Note it in "Running".
-
-**Security guardrails** (the input is an untrusted file parsed by a C program with a history of CVEs)
-
-- [ ] Always pass `-dSAFER`. Never `-dNOSAFER`, never `-c`/PostScript built from user input.
-- [ ] `exec.CommandContext` with explicit args, never a shell. Build args only from validated enums and integers. User strings, including the uploaded filename, never reach the command line.
-- [ ] Use `os.CreateTemp` for input and output paths (they can't start with `-`), and `defer os.Remove` both.
-- [ ] Check the file starts with `%PDF-` before running `gs`. Don't trust the extension or `Content-Type`.
 - [ ] Upload limit applies (see "Upload limit"): `http.MaxBytesReader` before parsing.
-- [ ] Timeout per run (e.g. 60 s, in `config.yaml`) via `context.WithTimeout`. Set `cmd.WaitDelay` so a hung process can't block the handler.
-- [ ] Limit concurrent `gs` runs with a semaphore (buffered channel, e.g. `runtime.NumCPU()`). When it's full, wait until the request context is done, then respond 503 "Busy, try again in a moment".
-- [ ] Capture stderr (capped, e.g. 4 KB) for the logs. Never show it to the user.
 - [ ] Container limits in `docker-compose.yml`: `mem_limit`, `pids_limit`, `cpus`, and `read_only: true` with a `tmpfs` for `/tmp`. Keep the non-root user.
-
-**Tests**
-
-- [ ] `PDFCompressRequest.Validate`: bad level/color, dpi out of range (71, 301), missing file.
-- [ ] Args builder (pure function): each preset, grayscale on/off, and dpi showing up in both color and gray flags.
-- [ ] Integration test behind a build tag or `exec.LookPath` skip: a small fixture PDF compresses, a non-PDF is rejected, a password-protected PDF returns 422.
-- [ ] Handler with a mocked service: 422 for validation errors, 500 without details for internal errors.
+- [ ] Tests:
+  - Integration test behind a build tag or `exec.LookPath` skip: a small fixture PDF compresses, a non-PDF is rejected, a password-protected PDF returns 422.
+  - Handler with a mocked service: 422 for validation errors, 500 without details for internal errors.
 
 ### PDF → Images (evaluating)
 

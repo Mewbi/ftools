@@ -8,6 +8,8 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o ftools .
 
 FROM alpine:3.24
+# Ghostscript compresses PDFs.
+RUN apk add --no-cache ghostscript
 RUN adduser -D -H -u 10001 app
 WORKDIR /app
 COPY --from=builder /app/ftools .
