@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -24,6 +25,11 @@ func (c *controller) PDFPage(ctx *gin.Context) {
 func (c *controller) CompressPDF(ctx *gin.Context) {
 	header, err := ctx.FormFile("file")
 	if err != nil {
+		var tooBig *http.MaxBytesError
+		if errors.As(err, &tooBig) {
+			c.convertError(ctx, fmt.Errorf("%w: file exceeds %d bytes", entity.ErrInvalidRequest, tooBig.Limit))
+			return
+		}
 		c.convertError(ctx, fmt.Errorf("%w: choose a PDF to compress", entity.ErrInvalidRequest))
 		return
 	}

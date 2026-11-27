@@ -16,6 +16,7 @@ import (
 
 type server struct {
 	logger        *zap.Logger
+	config        config.Server
 	webController web.WebController
 	server        *http.Server
 }
@@ -60,7 +61,10 @@ func New(p Params) *server {
 	s := &server{
 		webController: p.WebController,
 		logger:        p.Logger,
+		config:        p.Config,
 	}
+
+	r.Use(s.maxUploadSizeMiddleware())
 
 	if err := s.setupWebRoutes(r); err != nil {
 		p.Logger.Fatal("failed to setup web routes", zap.Error(err))

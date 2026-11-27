@@ -19,7 +19,8 @@ type Config struct {
 }
 
 type Server struct {
-	Addr string `yaml:"addr"`
+	Addr          string `yaml:"addr"`
+	MaxUploadSize int64  `yaml:"max_upload_size"`
 }
 
 type PDF struct {
