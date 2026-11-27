@@ -48,7 +48,7 @@ func New(p Params) (Service, error) {
 		pdf.QueueTimeout = 30 * time.Second
 	}
 	if pdf.MaxConcurrent <= 0 {
-		pdf.MaxConcurrent = runtime.NumCPU()
+		pdf.MaxConcurrent = runtime.GOMAXPROCS(0)
 	}
 
 	return &service{

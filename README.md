@@ -34,12 +34,12 @@ The Docker image embeds `frontend/static/css/app.css` as it is on disk. If templ
 
 ### Upload limit
 
-Without nginx nothing limits request size yet. The UI promises 20 MB (`frontend/templates/components/dropzone.html`).
+`server.max_upload_size` (50 MB) is enforced by `maxUploadSizeMiddleware`, registered globally with `r.Use`.
 
-- [ ] Add `max_upload_size` to `config.yaml` and `config.Server`.
-- [ ] Cap the body before parsing: `ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, limit)` (middleware on the upload routes), and set `r.MaxMultipartMemory` so large files spill to disk instead of RAM.
-- [ ] On `*http.MaxBytesError`, respond `413` with `partials/error`: "This file is larger than 20 MB. Choose a smaller file."
-- [ ] Keep the "up to 20 MB" text in `dropzone.html` in sync with the config.
+- [ ] Attach the middleware per route instead of globally, with a much smaller limit for `qrcode/generate` (~16 KiB).
+- [ ] Set `r.MaxMultipartMemory` so large files spill to disk instead of being held in RAM twice (multipart buffer + `readFormFile`).
+- [ ] On `*http.MaxBytesError`, respond `413` with `partials/error`: "This file is larger than 50 MB. Choose a smaller file." (today it's a 422 "file exceeds N bytes").
+- [ ] Keep the "up to 50 MB" text in `dropzone.html` in sync with the config.
 - [ ] If nginx is added later, set `client_max_body_size` to match.
 
 ### QR code generator
@@ -66,8 +66,6 @@ Without nginx nothing limits request size yet. The UI promises 20 MB (`frontend/
 - `-dPDFSTOPONERROR` is needed: without it gs exits 0 on a password-protected file and writes an empty PDF. Downside: damaged files gs could have repaired are rejected. Revisit if users report valid-looking PDFs failing.
 
 - [ ] Test the presets on real files (scans, text-only, with links). Ghostscript rewrites the PDF and may drop hyperlinks. If it does, mention it on the page.
-- [ ] Upload limit applies (see "Upload limit"): `http.MaxBytesReader` before parsing.
-- [ ] Container limits in `docker-compose.yml`: `mem_limit`, `pids_limit`, `cpus`, and `read_only: true` with a `tmpfs` for `/tmp`. Keep the non-root user.
 - [ ] Tests:
   - Integration test behind a build tag or `exec.LookPath` skip: a small fixture PDF compresses, a non-PDF is rejected, a password-protected PDF returns 422.
   - Handler with a mocked service: 422 for validation errors, 500 without details for internal errors.
@@ -97,7 +95,7 @@ The site says "Files are deleted as soon as your result is ready", so this has t
 ### Later
 
 - [ ] Revisit error handling in the web controller. Right now handlers return `422` with the validation error's text (e.g. "qr code: content is empty") and `500` with a generic message for service errors. Consider one shared way to map known errors to a status and a user-facing message, so wording isn't the raw error string and isn't repeated per handler.
-- [ ] Server timeouts in `internal/controller/server.go`. Without them, slow or stalled clients can hold connections open forever. At minimum `ReadHeaderTimeout: 10 * time.Second`; add `ReadTimeout`/`WriteTimeout` once uploads exist (long enough for a 20 MB upload on a slow connection). Good candidates for `config.yaml`.
+- [ ] Server timeouts in `internal/controller/server.go`. Without them, slow or stalled clients can hold connections open forever. At minimum `ReadHeaderTimeout: 10 * time.Second`; add `ReadTimeout`/`WriteTimeout` once uploads exist (long enough for a 50 MB upload on a slow connection). Good candidates for `config.yaml`.
 - [ ] 404 page: `r.NoRoute(...)` rendering a page with the layout, instead of Gin's plain "404 page not found".
 - [ ] Log server failures:
   - `go srv.Serve(ln)` drops its error, so a server that dies after startup leaves no trace. Log anything that isn't `http.ErrServerClosed`.
@@ -110,7 +108,7 @@ The site says "Files are deleted as soon as your result is ready", so this has t
       max-size: "10m"
       max-file: "3"
   ```
-- [ ] Processing timeout per request (`context.WithTimeout` around image/PDF work).
+- [ ] Processing timeout per request (`context.WithTimeout`) for image work. PDF already has `pdf.timeout`.
 - [ ] Rate limiting per IP for the upload routes.
 - [ ] Healthcheck endpoint and `healthcheck:` in `docker-compose.yml`.
 - [ ] nginx in front (static files, TLS, `client_max_body_size`) once deploying.

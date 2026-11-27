@@ -8,3 +8,22 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     restart: unless-stopped
+    # Root filesystem is read-only
+    # tmpfs lives in RAM and counts toward the memory limit below.
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    environment:
+      # Soft limit for the Go heap only. Ghostscript runs as child processes
+      GOMEMLIMIT: ${GOMEMLIMIT:-384MiB}
+    deploy:
+      resources:
+        limits:
+          # Also caps GOMAXPROCS
+          cpus: "${CPU_LIMIT:-2}"
+          # Covers the app and every gs process it starts. Exceeding it OOM-kills the container.
+          memory: ${MEMORY_LIMIT:-2G}
+          # gs subprocesses + Go threads
+          pids: 256
+        reservations:
+          memory: 256M
